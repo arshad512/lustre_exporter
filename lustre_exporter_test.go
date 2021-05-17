@@ -1688,6 +1688,8 @@ func TestCollector(t *testing.T) {
 
 		//Health metrics
 		{"lustre_health_check", "Current health status for the indicated instance: 1 refers to 'healthy', 0 refers to 'unhealthy'", gauge, []labelPair{{"component", "health"}, {"target", "lustre"}}, 1, false},
+		{"lustre_degraded", "Binary indicator as to whether or not the pool is degraded - 0 for not degraded, 1 for degraded", gauge, []labelPair{{"component", "health"}, {"target", "lustre-OST0000"}}, 0, false},
+		{"lustre_degraded", "Binary indicator as to whether or not the pool is degraded - 0 for not degraded, 1 for degraded", gauge, []labelPair{{"component", "health"}, {"target", "lustre-OST0002"}}, 0, false},
 	}
 
 	// These following metrics should be filtered out as they are specific to the deployment and will always change
