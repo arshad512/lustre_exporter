@@ -54,6 +54,7 @@ func (s *lustreSysSource) generateHealthStatusTemplates(filter string) {
 		"obdfilter/*-OST*": {
 			{"degraded", "degraded", "Binary indicator as to whether or not the pool is degraded - 0 for not degraded, 1 for degraded",
 			 s.gaugeMetric, false, core},
+		},
 	}
 	for path := range metricMap {
 		for _, item := range metricMap[path] {
