@@ -26,6 +26,10 @@ const (
 	// string mappings for 'health_check' values
 	healthCheckHealthy   string = "1"
 	healthCheckUnhealthy string = "0"
+
+	// string mappings for 'degraded' values
+	ostpoolHealthy   string = "0"
+	ostpoolUnhealthy string = "1"
 )
 
 var (
@@ -47,6 +51,9 @@ func (s *lustreSysSource) generateHealthStatusTemplates(filter string) {
 		"": {
 			{"health_check", "health_check", "Current health status for the indicated instance: " + healthCheckHealthy + " refers to 'healthy', " + healthCheckUnhealthy + " refers to 'unhealthy'", s.gaugeMetric, false, core},
 		},
+		"obdfilter/*-OST*": {
+			{"degraded", "degraded", "Binary indicator as to whether or not the pool is degraded - 0 for not degraded, 1 for degraded",
+			 s.gaugeMetric, false, core},
 	}
 	for path := range metricMap {
 		for _, item := range metricMap[path] {
@@ -88,6 +95,13 @@ func (s *lustreSysSource) Update(ch chan<- prometheus.Metric) (err error) {
 				if err != nil {
 					return err
 				}
+			case "degraded":
+				err = s.parseTextFile(metric.source, "degraded", path, directoryDepth, metric.helpText, metric.promName, func(nodeType string, nodeName string, name string, helpText string, value float64) {
+					ch <- metric.metricFunc([]string{"component", "target"}, []string{nodeType, nodeName}, name, helpText, value)
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -114,6 +128,20 @@ func (s *lustreSysSource) parseTextFile(nodeType string, metricType string, path
 			handler(nodeType, nodeName, promName, helpText, value)
 		} else {
 			value, err := strconv.ParseFloat(strings.TrimSpace(healthCheckUnhealthy), 64)
+			if err != nil {
+				return err
+			}
+			handler(nodeType, nodeName, promName, helpText, value)
+		}
+	case "degraded":
+		if strings.TrimSpace(fileString) == "0" {
+			value, err := strconv.ParseFloat(strings.TrimSpace(ostpoolHealthy), 64)
+			if err != nil {
+				return err
+			}
+			handler(nodeType, nodeName, promName, helpText, value)
+		} else {
+			value, err := strconv.ParseFloat(strings.TrimSpace(ostpoolUnhealthy), 64)
 			if err != nil {
 				return err
 			}
